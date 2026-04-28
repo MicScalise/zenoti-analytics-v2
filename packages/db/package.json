@@ -1,0 +1,18 @@
+{
+  "name": "@za/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@za/shared": "workspace:*",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/pg": "^8.11.0"
+  }
+}

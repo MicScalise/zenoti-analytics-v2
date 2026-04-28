@@ -1,0 +1,50 @@
+# =============================================================================
+# dynamic.yml — Traefik dynamic routing configuration
+# Implements: EP §18, ADR-007 (edge configuration)
+# =============================================================================
+
+# HTTP routers for service routing
+http:
+  routers:
+    # API server routing
+    api:
+      rule: "Host(`api.zenoti-analytics.com`) || HostRegexp(`{subdomain:.+}.localhost`)"
+      entryPoints:
+        - websecure
+      service: api
+      tls: {}
+
+    # Web dashboard routing
+    web:
+      rule: "Host(`app.zenoti-analytics.com`) || Host(`localhost`)"
+      entryPoints:
+        - websecure
+      service: web
+      tls: {}
+
+  # Service definitions with load balancing
+  services:
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://api:3000"
+        healthCheck:
+          path: "/health"
+          interval: "10s"
+
+    web:
+      loadBalancer:
+        servers:
+          - url: "http://web:80"
+        healthCheck:
+          path: "/"
+          interval: "10s"
+
+# TLS configuration
+tls:
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305

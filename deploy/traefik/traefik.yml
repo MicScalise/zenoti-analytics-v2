@@ -1,0 +1,43 @@
+# =============================================================================
+# traefik.yml — Traefik static configuration
+# Implements: EP §18, ADR-007 (edge configuration)
+# =============================================================================
+
+# API and dashboard access
+api:
+  dashboard: true
+  insecure: true
+
+# Entry points for HTTP and HTTPS
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+
+  websecure:
+    address: ":443"
+
+# Docker provider for service discovery
+providers:
+  docker:
+    exposedByDefault: false
+    network: deploy_default
+
+  file:
+    filename: /etc/traefik/dynamic.yml
+
+# Logging
+log:
+  level: INFO
+
+# Access logs
+accessLog:
+  fields:
+    names:
+      ClientAddr: true
+      RequestMethod: true
+      RequestPath: true

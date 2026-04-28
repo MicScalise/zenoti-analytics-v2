@@ -1,0 +1,24 @@
+{
+  "name": "zenoti-analytics",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zenoti Analytics Platform — multi-tenant medspa analytics",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "typecheck": "pnpm -r exec tsc --noEmit"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

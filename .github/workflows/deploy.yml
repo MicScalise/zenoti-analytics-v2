@@ -1,0 +1,92 @@
+# =============================================================================
+# deploy.yml — GitHub Actions deployment pipeline
+# Implements: EP §18 (deployment readiness)
+# =============================================================================
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "9"
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/main' || inputs.environment == 'staging'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push images
+        run: |
+          docker build -f apps/api/Dockerfile -t ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api:staging .
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api:staging
+          docker build -f apps/web/Dockerfile -t ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/web:staging .
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/web:staging
+          docker build -f apps/workers/Dockerfile -t ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/workers:staging .
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/workers:staging
+
+      - name: Run smoke tests
+        run: |
+          echo "Running staging smoke tests..."
+          # Health check against staging API
+          curl -sf https://staging-api.zenoti-analytics.com/health || exit 1
+
+  deploy-production:
+    name: Deploy to Production
+    needs: deploy-staging
+    if: inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      # Manual approval gate for production deployments
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote staging images to production
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api:staging
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api:staging ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api:production
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api:production
+
+      - name: Production health check
+        run: |
+          curl -sf https://api.zenoti-analytics.com/health || exit 1

@@ -1,0 +1,13 @@
+// =============================================================================
+// Utils package TypeScript config
+// =============================================================================
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": "."
+  },
+  "include": ["logger/**/*.ts", "errors/**/*.ts", "http/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

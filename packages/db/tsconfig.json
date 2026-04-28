@@ -1,0 +1,14 @@
+// =============================================================================
+// DB package TypeScript config
+// =============================================================================
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": "."
+  },
+  "include": ["schema/**/*.ts"],
+  "exclude": ["node_modules", "dist", "migrations", "seed", "sql"]
+}

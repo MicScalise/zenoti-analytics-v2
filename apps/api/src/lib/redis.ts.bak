@@ -1,0 +1,46 @@
+// =============================================================================
+// Redis — ioredis client setup (EP §15, DR-007)
+// Implements: DR-007 (dotenv loads BEFORE all imports that use env vars)
+// Used for: sessions, rate limiting, caching, BullMQ backend.
+// ============================================================================
+
+// DR-007: dotenv must load before any module that reads process.env
+import 'dotenv/config';
+
+import Redis from 'ioredis';
+
+/** Redis client — singleton per process */
+let redis: Redis | undefined;
+
+/**
+ * Get or create the Redis client.
+ * Uses REDIS_URL from environment (set by dotenv).
+ *
+ * @returns Configured ioredis client
+ */
+export function getRedis(): Redis {
+  if (!redis) {
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      throw new Error('REDIS_URL environment variable is not set');
+    }
+    redis = new Redis(redisUrl, {
+      maxRetriesPerRequest: 3,
+      retryStrategy(times: number) {
+        const delay = Math.min(times * 200, 5000);
+        return delay;
+      },
+    });
+  }
+  return redis;
+}
+
+/**
+ * Close the Redis connection (for graceful shutdown).
+ */
+export async function closeRedis(): Promise<void> {
+  if (redis) {
+    await redis.quit();
+    redis = undefined;
+  }
+}

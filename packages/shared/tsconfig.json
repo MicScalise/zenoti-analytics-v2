@@ -1,0 +1,14 @@
+// =============================================================================
+// Shared package TypeScript config
+// =============================================================================
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "composite": true
+  },
+  "include": ["types/**/*.ts", "validators/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

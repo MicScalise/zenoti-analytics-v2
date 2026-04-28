@@ -1,0 +1,98 @@
+# =============================================================================
+# docker-compose.yml — Full stack deployment configuration
+# Implements: EP §18 (deployment readiness)
+# =============================================================================
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: za
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-za_dev_password}
+      POSTGRES_DB: za_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../packages/db/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U za"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for sessions and queues
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # API server
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://za:${POSTGRES_PASSWORD:-za_dev_password}@postgres:5432/za_dev
+      REDIS_URL: redis://redis:6379
+      JWT_PRIVATE_KEY_B64: ${JWT_PRIVATE_KEY_B64}
+      JWT_PUBLIC_KEY_B64: ${JWT_PUBLIC_KEY_B64}
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Web dashboard
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+  # Background workers
+  workers:
+    build:
+      context: ..
+      dockerfile: apps/workers/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://za:${POSTGRES_PASSWORD:-za_dev_password}@postgres:5432/za_dev
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      ZENOTI_API_KEY: ${ZENOTI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Traefik reverse proxy
+  traefik:
+    image: traefik:v3.0
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  postgres_data:
+  redis_data:
