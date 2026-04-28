@@ -4,6 +4,7 @@
 // Implements: OP-PAT-01 through OP-PAT-06 (DD-36 §5)
 // ============================================================================
 
+import crypto from 'node:crypto';
 import { pool, withTenantContext } from '../../db.js';
 // import { v4 as uuidv4 } from 'uuid'; // Stubbed
 import { closeCurrentVersion, insertNewVersion, SCDPatientFields } from './patient-scd.js';
@@ -54,7 +55,7 @@ export interface UpdatePatientInput {
 export async function createPatient(
   tenantId: string, userId: string, input: CreatePatientInput
 ): Promise<string> {
-  const patientId = 'stub-uuid-' + Date.now();
+  const patientId = crypto.randomUUID();
   const firstVisitDate = new Date().toISOString().split('T')[0];
 
   await withTenantContext(tenantId, userId, async (client) => {

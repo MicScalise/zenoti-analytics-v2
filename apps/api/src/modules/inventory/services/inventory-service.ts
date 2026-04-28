@@ -4,6 +4,7 @@
 // Implements: OP-INV-01, OP-INV-02, OP-USAGE-01, OP-USAGE-02 (DD-36 §8)
 // ============================================================================
 
+import crypto from 'node:crypto';
 import { pool, withTenantContext } from '../../db.js';
 // import { v4 as uuidv4 } from 'uuid'; // Stubbed
 import { getAvailableLots, decrementLotQuantity } from './inventory-lots.js';
@@ -80,7 +81,7 @@ export async function recordUsage(
     extendedCost: number; treatmentArea?: string;
   }
 ): Promise<string> {
-  const usageId = 'stub-uuid-' + Date.now();
+  const usageId = crypto.randomUUID();
   return withTenantContext(tenantId, userId, async (client) => {
     // Get available lots (FIFO, locked)
     const lots = await getAvailableLots(client, tenantId, input.inventoryItemId);

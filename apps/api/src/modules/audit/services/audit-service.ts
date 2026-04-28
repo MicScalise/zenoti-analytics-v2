@@ -5,6 +5,7 @@
 // Program runs in program-run-service.ts
 // ============================================================================
 
+import crypto from 'node:crypto';
 import { pool } from '../../db.js';
 // import { v4 as uuidv4 } from 'uuid'; // Stubbed
 // import { startProgramRun, completeProgramRun, failProgramRun } from './program-run-service.js'; // Unused
@@ -36,7 +37,7 @@ export interface ExtractionRunResponse {
 export async function startExtractionRun(
   tenantId: string, centerId: string | null, entityType: string
 ): Promise<{ extractionRunId: string; extractionStart: string }> {
-  const extractionRunId = 'stub-uuid-' + Date.now();
+  const extractionRunId = crypto.randomUUID();
   const { rows } = await pool.query(
     `INSERT INTO audit_extraction_runs (
       extraction_run_id, tenant_id, center_id, entity_type, status, extraction_start

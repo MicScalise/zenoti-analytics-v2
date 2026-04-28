@@ -5,6 +5,7 @@
 // State machine transitions in visit-state-machine.ts
 // ============================================================================
 
+import crypto from 'node:crypto';
 import { pool, withTenantContext } from '../../db.js';
 // import { v4 as uuidv4 } from 'uuid'; // Stubbed for build
 import { completeVisit, cancelVisit, markNoShow } from './visit-state-machine.js';
@@ -55,7 +56,7 @@ export { completeVisit, cancelVisit, markNoShow };
 export async function createVisit(
   tenantId: string, userId: string, input: CreateVisitInput
 ): Promise<string> {
-  const visitId = 'stub-uuid-' + Date.now();
+  const visitId = crypto.randomUUID();
   const result = await withTenantContext(tenantId, userId, async (client) => {
     const { rows } = await client.query(
       `INSERT INTO fct_visits (
@@ -144,7 +145,7 @@ export async function addVisitService(
     netRevenue: number; earnedDate: string;
   }
 ): Promise<string> {
-  const visitServiceId = 'stub-uuid-' + Date.now();
+  const visitServiceId = crypto.randomUUID();
   return withTenantContext(tenantId, userId, async (client) => {
     const { rows } = await client.query(
       `INSERT INTO fct_visit_services (

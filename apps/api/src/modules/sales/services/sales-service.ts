@@ -1,11 +1,10 @@
 // =============================================================================
-// import { _uuidv4 as uuidv4, _bcrypt as bcrypt } from '../../lib/stubs.js';
 // Sales Service — Payments, package redemptions, membership billing
 // Implements: OP-PMT-01, OP-PMT-02, OP-PKG-01, OP-MEM-01 (DD-36 §7)
-// ============================================================================
+// =============================================================================
 
+import crypto from 'node:crypto';
 import { pool, withTenantContext } from '../../db.js';
-// import { v4 as uuidv4 } from 'uuid'; // Stubbed
 import type { PaymentResponse, RedemptionResponse, MembershipBillingResponse } from './sales-types.js';
 export type { PaymentResponse, RedemptionResponse, MembershipBillingResponse } from './sales-types.js';
 
@@ -21,7 +20,7 @@ export async function createPayment(
     tenderType: string; liabilityAccountType: string;
   }
 ): Promise<string> {
-  const paymentId = 'stub-uuid-' + Date.now();
+  const paymentId = crypto.randomUUID();
   const result = await withTenantContext(tenantId, userId, async (client) => {
     const { rows } = await client.query(
       `INSERT INTO fct_payments (
@@ -83,7 +82,7 @@ export async function createPackageRedemption(
     unitsRedeemed: number; recognizedRevenueAmount: number;
   }
 ): Promise<string> {
-  const redemptionId = 'stub-uuid-' + Date.now();
+  const redemptionId = crypto.randomUUID();
   const result = await withTenantContext(tenantId, userId, async (client) => {
     const { rows } = await client.query(
       `INSERT INTO fct_package_redemptions (
@@ -117,7 +116,7 @@ export async function createMembershipBilling(
     amountCollected: number; coveragePeriodStart: string; coveragePeriodEnd: string;
   }
 ): Promise<string> {
-  const billingId = 'stub-uuid-' + Date.now();
+  const billingId = crypto.randomUUID();
   const result = await withTenantContext(tenantId, userId, async (client) => {
     const { rows } = await client.query(
       `INSERT INTO fct_membership_billing (

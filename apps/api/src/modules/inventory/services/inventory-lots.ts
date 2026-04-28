@@ -5,6 +5,7 @@
 // Extracted from inventory-service.ts per 150-line rule
 // ============================================================================
 
+import crypto from 'node:crypto';
 import { pool, withTenantContext } from '../../db.js';
 // import { v4 as uuidv4 } from 'uuid'; // Stubbed
 
@@ -89,7 +90,7 @@ export async function createLot(
     receivedQuantity: number; receivedUnitCost: number;
   }
 ): Promise<string> {
-  const lotId = 'stub-uuid-' + Date.now();
+  const lotId = crypto.randomUUID();
   const result = await withTenantContext(tenantId, userId, async (client) => {
     const { rows } = await client.query(
       `INSERT INTO dim_inventory_lots (

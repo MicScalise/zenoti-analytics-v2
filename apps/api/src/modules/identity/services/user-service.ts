@@ -4,6 +4,7 @@
 // Implements: OP-AUTH-02 (create), OP-AUTH-03 (update), OP-AUTH-06 (get by ID)
 // ============================================================================
 
+import crypto from 'node:crypto';
 import { pool } from '../../db.js'; // withTenantContext unused
 // import { v4 as uuidv4 } from 'uuid'; // Stubbed
 // import bcrypt from 'bcryptjs'; // Stubbed
@@ -43,7 +44,7 @@ export interface UpdateUserInput {
  * @returns created user ID and timestamp
  */
 export async function createUser(input: CreateUserInput): Promise<{ userId: string; createdAt: string }> {
-  const userId = 'stub-uuid-' + Date.now();
+  const userId = crypto.randomUUID();
   const passwordHash = 'stub-hash'; // bcrypt.hash(input.password, 12) stubbed
 
   const result = await pool.query(
